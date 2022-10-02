@@ -102,3 +102,51 @@ const (
 	NOTIMP
 	REFUSED
 )
+
+func numToRcode(num int) RCODE {
+	return RCODE(num)
+}
+
+type DNSHdr struct {
+	id                   uint16 // 16 bits
+	recursionDesired     bool   // 1 bit
+	truncatedMessage     bool   // 1 bit
+	authoritativeAnswer  bool   // 1 bit
+	opcode               uint8  // 4 bits
+	response             bool   // 1 bit
+	rescode              RCODE  // 4 bits
+	checkingDisabled     bool   // 1 bit
+	authedData           bool   // 1 bit
+	z                    bool   // 1 bit
+	recursionAvailable   bool   // 1 bit
+	questions            uint16 // 16 bits
+	answers              uint16 // 16 bits
+	authoritativeEntries uint16 // 16 bits
+	resourceEntries      uint16 // 16 bits
+}
+
+type Question struct {
+	// RName is a domain name represented as a sequence of labels, where each label consists of a length octet
+	// followed by that number of octets.The domain name terminates with the
+	// zero length octet for the null label of the root
+	QNAME string
+	// QTYPE specifies the type of the query
+	QTYPE uint16
+	// QCLASS  a two octet code that specifies the class of the query
+	QCLASS uint16
+}
+
+type Record struct {
+	// RName a domain name to which this resource record pertains
+	RName string
+	// RType two octets containing one of the RR type codes
+	RType uint16
+	// RClass two octets which specify the class of the data
+	RClass uint16
+	// RTTL is a a 32 bit unsigned integer that specifies the time
+	// interval (in seconds) that the resource record may be
+	// cached before it should be discarded
+	RTTL uint32
+	// Rdlength an unsigned 16 bit integer that specifies the length
+	Rdlength uint16
+}
