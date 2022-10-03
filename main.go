@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -92,6 +93,10 @@ func (e *Error) Error() string {
 	return "dns: " + e.err
 }
 
+func newErr(e string) error {
+	return Error{err: e}
+}
+
 type RCODE int
 
 const (
@@ -125,7 +130,9 @@ type DNSHdr struct {
 	resourceEntries      uint16 // 16 bits
 }
 
-type Question struct {
+// DNSQuestion represents the question section which is used to carry the "question" in most queries,
+// i.e., the parameters that define what is being asked
+type DNSQuestion struct {
 	// RName is a domain name represented as a sequence of labels, where each label consists of a length octet
 	// followed by that number of octets.The domain name terminates with the
 	// zero length octet for the null label of the root
@@ -136,7 +143,7 @@ type Question struct {
 	QCLASS uint16
 }
 
-type Record struct {
+type DNSRecord struct {
 	// RName a domain name to which this resource record pertains
 	RName string
 	// RType two octets containing one of the RR type codes
@@ -149,4 +156,38 @@ type Record struct {
 	RTTL uint32
 	// Rdlength an unsigned 16 bit integer that specifies the length
 	Rdlength uint16
+}
+
+// DNS packet that is sent across a transport
+type DNSPacket struct {
+	// Header of the DNS packet that contains info about the packet. It is always present
+	Header DNSHdr
+	// Questions The question section is used to carry the "question" in most queries,
+	// i.e., the parameters that define what is being asked
+	Questions []DNSQuestion
+	// The Answer, Authorities, and additional sections all share the same
+	// format: a variable number of resource records, where the number of
+	// records is specified in the corresponding count field in the header
+	Answers     []DNSRecord
+	Authorities []DNSRecord
+	Resources   []DNSRecord
+}
+
+func (dh *DNSHdr) unmarshall(msg []byte) error {
+	t
+	// Check to see if the lenght of the message is the correct size! The message size is usually 12 bytes
+	if len(msg) != 12 {
+		return errors.New("invalid header size")
+	}
+
+	//
+	//
+}
+
+func ReadUint16(msg []byte, off int) (int, error) {
+	if off+2 > len(msg) {
+		return 0, newErr("overflow of slice while reading uint from message")
+	}
+	// https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/encoding/binary/binary.go;l=140
+	return uint16(b[1]) | uint16(b[0])<<0x8, nil
 }
