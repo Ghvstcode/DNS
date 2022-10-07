@@ -174,20 +174,44 @@ type DNSPacket struct {
 }
 
 func (dh *DNSHdr) unmarshall(msg []byte) error {
-	t
 	// Check to see if the lenght of the message is the correct size! The message size is usually 12 bytes
 	if len(msg) != 12 {
 		return errors.New("invalid header size")
 	}
+	var err error
 
-	//
-	//
+	off := 0
+
+	dh.id, err = ReadUint16(msg, off)
+	if err != nil {
+		return err
+	}
+	// Increment the offset after the previous uint16 read
+	off += 2
+	bits, err := ReadUint16(msg, off)
+	if err != nil {
+		return err
+	}
+	off += 2
 }
 
-func ReadUint16(msg []byte, off int) (int, error) {
+func (dh *DNSHdr) unmarshallHeaderFlags(bits uint16) {
+	dh.recursionDesired = (bits & (1 << 0x8)) != 0
+	dh.response = (bits & (1 << 0xF)) != 0
+	dh.opcode = uint8((bits >> 0xB) & 0xF)
+	dh.authoritativeAnswer = (bits & (1 << 0xA)) != 0
+	dh.truncatedMessage = (bits & (1 << 0x9)) != 0
+	dh.recursionAvailable = (bits & (1 << 0x7)) != 0
+	dh.z = (bits & (1 << 0x6)) != 0
+	dh.authedData = (bits & (1 << 0x5)) != 0
+	dh.checkingDisabled = (bits & (1 << 0x4)) != 0
+	dh.opcode = uint8((bits >> 0xB) & 0xF)
+}
+
+func ReadUint16(msg []byte, off int) (uint16, error) {
 	if off+2 > len(msg) {
 		return 0, newErr("overflow of slice while reading uint from message")
 	}
 	// https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/encoding/binary/binary.go;l=140
-	return uint16(b[1]) | uint16(b[0])<<0x8, nil
+	return uint16(msg[1]) | uint16(msg[0])<<0x8, nil
 }
