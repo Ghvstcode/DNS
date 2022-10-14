@@ -17,21 +17,6 @@ import (
 //+---------------------+
 //|      Additional     | additional records
 
-// DNS HEADER
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
-//|  ID(16bit) - assigned  randomly                      |
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
-//|QR(1bi)|Opcode(4bi)|AA(4bi)|TC|RD|RA|Z    |   RCODE      |
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+----------
-//|                    QDCOUNT                           |
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
-//|                    ANCOUNT                           |
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
-//|                    NSCOUNT                           |
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+------+
-//|                    ARCOUNT                           |
-//+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+------+
-
 type BytePacket struct {
 	buf []byte
 	pos uint16
@@ -83,51 +68,8 @@ func (b *BytePacket) getRange(start, len uint16) ([]byte, error) {
 	return b.buf[start : start+len], nil
 }
 
-// Error represents a DNS error.
-type Error struct{ err string }
-
-func (e *Error) Error() string {
-	if e == nil {
-		return "dns: <nil>"
-	}
-	return "dns: " + e.err
-}
-
-func newErr(e string) error {
-	return Error{err: e}
-}
-
-type RCODE int
-
-const (
-	NOERROR RCODE = iota
-	FORMERR
-	SERVFAIL
-	NXDOMAIN
-	NOTIMP
-	REFUSED
-)
-
 func numToRcode(num int) RCODE {
 	return RCODE(num)
-}
-
-type DNSHdr struct {
-	id                   uint16 // 16 bits
-	recursionDesired     bool   // 1 bit
-	truncatedMessage     bool   // 1 bit
-	authoritativeAnswer  bool   // 1 bit
-	opcode               uint8  // 4 bits
-	response             bool   // 1 bit
-	rescode              RCODE  // 4 bits
-	checkingDisabled     bool   // 1 bit
-	authedData           bool   // 1 bit
-	z                    bool   // 1 bit
-	recursionAvailable   bool   // 1 bit
-	questions            uint16 // 16 bits
-	answers              uint16 // 16 bits
-	authoritativeEntries uint16 // 16 bits
-	resourceEntries      uint16 // 16 bits
 }
 
 // DNSQuestion represents the question section which is used to carry the "question" in most queries,
@@ -173,45 +115,4 @@ type DNSPacket struct {
 	Resources   []DNSRecord
 }
 
-func (dh *DNSHdr) unmarshall(msg []byte) error {
-	// Check to see if the lenght of the message is the correct size! The message size is usually 12 bytes
-	if len(msg) != 12 {
-		return errors.New("invalid header size")
-	}
-	var err error
-
-	off := 0
-
-	dh.id, err = ReadUint16(msg, off)
-	if err != nil {
-		return err
-	}
-	// Increment the offset after the previous uint16 read
-	off += 2
-	bits, err := ReadUint16(msg, off)
-	if err != nil {
-		return err
-	}
-	off += 2
-}
-
-func (dh *DNSHdr) unmarshallHeaderFlags(bits uint16) {
-	dh.recursionDesired = (bits & (1 << 0x8)) != 0
-	dh.response = (bits & (1 << 0xF)) != 0
-	dh.opcode = uint8((bits >> 0xB) & 0xF)
-	dh.authoritativeAnswer = (bits & (1 << 0xA)) != 0
-	dh.truncatedMessage = (bits & (1 << 0x9)) != 0
-	dh.recursionAvailable = (bits & (1 << 0x7)) != 0
-	dh.z = (bits & (1 << 0x6)) != 0
-	dh.authedData = (bits & (1 << 0x5)) != 0
-	dh.checkingDisabled = (bits & (1 << 0x4)) != 0
-	dh.opcode = uint8((bits >> 0xB) & 0xF)
-}
-
-func ReadUint16(msg []byte, off int) (uint16, error) {
-	if off+2 > len(msg) {
-		return 0, newErr("overflow of slice while reading uint from message")
-	}
-	// https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/encoding/binary/binary.go;l=140
-	return uint16(msg[1]) | uint16(msg[0])<<0x8, nil
-}
+func (dq *DNSQuestion) unmarshall(msg []byte) error {}
