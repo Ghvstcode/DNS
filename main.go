@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+
+	"github.com/Ghvstcode/DNS/pkg/dnslib"
 )
 
 //DNS packet structure
@@ -103,7 +105,7 @@ type DNSRecord struct {
 // DNS packet that is sent across a transport
 type DNSPacket struct {
 	// Header of the DNS packet that contains info about the packet. It is always present
-	Header DNSHdr
+	Header dnslib.DNSHdr
 	// Questions The question section is used to carry the "question" in most queries,
 	// i.e., the parameters that define what is being asked
 	Questions []DNSQuestion

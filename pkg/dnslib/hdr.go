@@ -13,7 +13,7 @@ const (
 	REFUSED
 )
 
-// DNS HEADER
+// DNS MSG HEADER
 //+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
 //|  ID(16bit) - assigned  randomly                      |
 //+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
@@ -44,6 +44,7 @@ type DNSHdr struct {
 	AnCount             uint16 // 16 bits
 	NsCount             uint16 // 16 bits
 	ArCount             uint16 // 16 bits
+	QR                  bool
 }
 
 func (dh *DNSHdr) unmarshall(msg []byte) error {
@@ -109,27 +110,68 @@ func (dh *DNSHdr) marshallHeader(msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Increment the offset after the previous uint16 read
+	off += 2
+	err = PutUint16(msg, off, dh.getBits())
+	if err != nil {
+		return nil, err
+	}
+
+	off += 2
 	err = PutUint16(msg, off, dh.QdCount)
 	if err != nil {
 		return nil, err
 	}
-
+	off += 2
 	err = PutUint16(msg, off, dh.AnCount)
 	if err != nil {
 		return nil, err
 	}
-
+	off += 2
 	err = PutUint16(msg, off, dh.NsCount)
 	if err != nil {
 		return nil, err
 	}
-
+	off += 2
 	err = PutUint16(msg, off, dh.ArCount)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: pack flag as well.
 	return msg, nil
+}
+
+func (dh *DNSHdr) getBits() uint16 {
+	var bits uint16
+	bits = uint16(dh.opcode)<<11 | uint16(dh.rescode&0xF)
+	if dh.response {
+		bits |= 1 << 0xF
+	}
+	if dh.authoritativeAnswer {
+		bits |= 1 << 0xA
+	}
+	if dh.truncatedMessage {
+		bits |= 1 << 0x9
+	}
+	if dh.recursionDesired {
+		bits |= 1 << 0x8
+	}
+
+	if dh.recursionAvailable {
+		bits |= 1 << 0x7
+	}
+
+	if dh.z {
+		bits |= 1 << 0x6
+	}
+	if dh.authedData {
+		bits |= 1 << 0x5
+	}
+	if dh.checkingDisabled {
+		bits |= 1 << 0x4
+	}
+
+	return bits
 }
 
 func ReadUint16(msg []byte, off int) (uint16, error) {
