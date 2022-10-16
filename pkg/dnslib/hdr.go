@@ -192,3 +192,70 @@ func PutUint16(msg []byte, off int, v uint16) error {
 
 	return nil
 }
+
+// This function is a stripped down version of this https://github.com/miekg/dns/blob/master/msg.go#L378
+func readQname(msg []byte, off int) (string, int, error) {
+	off1 := 0
+	lenmsg := len(msg)
+	ptr := 0 // number of pointers followed
+	res := make([]byte, 0)
+Loop:
+	for {
+		if off >= lenmsg {
+			return "", lenmsg, newErr("overflow of slice")
+		}
+		c := int(msg[off])
+		off++
+		switch c & 0xC0 {
+		case 0x00:
+			if c == 0x00 {
+				break Loop
+			}
+
+			// literal string
+			if off+c > lenmsg {
+				return "", lenmsg, newErr("overflow of slice")
+			}
+
+			for _, b := range msg[off : off+c] {
+				if isDomainNameLabelSpecial(b) {
+					res = append(res, '\\', b)
+				} else {
+					res = append(res, b)
+				}
+			}
+			res = append(res, '.')
+			off += c
+		case 0xC0:
+			if off >= lenmsg {
+				return "", lenmsg, newErr("overflow of slice")
+			}
+			c1 := msg[off]
+			off++
+			if ptr == 0 {
+				off1 = off
+			}
+
+			ptr++
+			off = (c^0xC0)<<8 | int(c1)
+		default:
+			// 0x80 and 0x40 are reserved
+			return "", lenmsg, newErr("bad domain name")
+		}
+	}
+	if ptr == 0 {
+		off1 = off
+	}
+	if len(res) == 0 {
+		return ".", off1, nil
+	}
+	return string(res), off1, nil
+}
+
+func isDomainNameLabelSpecial(b byte) bool {
+	switch b {
+	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
+		return true
+	}
+	return false
+}
