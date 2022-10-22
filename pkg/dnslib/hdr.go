@@ -1,6 +1,10 @@
 package dnslib
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"log"
+)
 
 type RCODE int
 
@@ -54,38 +58,48 @@ func (dh *DNSHdr) unmarshall(msg []byte) error {
 	}
 	var err error
 
-	off := 1
+	off := 0
 
 	dh.id, err = ReadUint16(msg, off)
 	if err != nil {
+		log.Panic(err)
 		return err
 	}
 	// Increment the offset after the previous uint16 read
 	off += 2
+	fmt.Println("OFF-70", off)
 	bits, err := ReadUint16(msg, off)
 	if err != nil {
+		log.Panic(err)
 		return err
 	}
 	// Read Header Flags
 	dh.unmarshallHeaderFlags(bits)
 	off += 2
+	fmt.Println("OFF-79", off)
 	dh.QdCount, err = ReadUint16(msg, off)
 	if err != nil {
+		log.Panic(err)
 		return err
 	}
 	off += 2
 	dh.AnCount, err = ReadUint16(msg, off)
 	if err != nil {
+		log.Panic(err)
 		return err
 	}
 	off += 2
 	dh.NsCount, err = ReadUint16(msg, off)
 	if err != nil {
+		log.Panic(err)
 		return err
 	}
 	off += 2
+	fmt.Println("OFFSET", off)
+	fmt.Println("MSGLEN", len(msg))
 	dh.ArCount, err = ReadUint16(msg, off)
 	if err != nil {
+		log.Panic(err)
 		return err
 	}
 	return nil
@@ -179,7 +193,7 @@ func ReadUint16(msg []byte, off int) (uint16, error) {
 		return 0, newErr("overflow of slice while reading uint from message")
 	}
 	// https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/encoding/binary/binary.go;l=140
-	return uint16(msg[off]) | uint16(msg[off-1])<<0x8, nil
+	return uint16(msg[off+1]) | uint16(msg[off])<<0x8, nil
 }
 
 func PutUint16(msg []byte, off int, v uint16) error {
