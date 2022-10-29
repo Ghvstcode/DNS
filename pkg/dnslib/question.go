@@ -1,7 +1,5 @@
 package dnslib
 
-import "fmt"
-
 type DNSQuestion struct {
 	QNAME  string
 	QTYPE  QTYPE
@@ -64,8 +62,6 @@ const (
 )
 
 func (dq *DNSQuestion) unmarshall(msg []byte) (off int, err error) {
-	// var off int
-	// var err error
 	dq.QNAME, off, err = readQname(msg, off)
 	if err != nil {
 		return off, err
@@ -77,7 +73,7 @@ func (dq *DNSQuestion) unmarshall(msg []byte) (off int, err error) {
 	if err != nil {
 		return off, err
 	}
-	fmt.Println("-78QTYPE", dq.QTYPE, qt)
+
 	off += 2
 
 	// Read the Question Class

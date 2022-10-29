@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -25,13 +26,14 @@ func main() {
 		fmt.Println("File reading error", err)
 		return
 	}
-	fmt.Println("Contents of file:")
-	fmt.Println(string(data))
 
-	dp := dnslib.DNSPacket{}
-	fmt.Println("DNS PACKET1", dp)
+	fmt.Println("INCLEN", len(data))
+	dp := &dnslib.DNSPacket{}
 	if err := dp.Unmarshall(data); err != nil {
 		panic(err)
 	}
-	fmt.Println("DNS PACKET", dp)
+
+	if err := json.NewEncoder(os.Stdout).Encode(dp); err != nil {
+		panic(err)
+	}
 }

@@ -3,7 +3,6 @@ package dnslib
 import (
 	"errors"
 	"fmt"
-	"log"
 )
 
 type RCODE int
@@ -62,44 +61,35 @@ func (dh *DNSHdr) unmarshall(msg []byte) error {
 
 	dh.id, err = ReadUint16(msg, off)
 	if err != nil {
-		log.Panic(err)
 		return err
 	}
 	// Increment the offset after the previous uint16 read
 	off += 2
-	fmt.Println("OFF-70", off)
+
 	bits, err := ReadUint16(msg, off)
 	if err != nil {
-		log.Panic(err)
 		return err
 	}
 	// Read Header Flags
 	dh.unmarshallHeaderFlags(bits)
 	off += 2
-	fmt.Println("OFF-79", off)
 	dh.QdCount, err = ReadUint16(msg, off)
 	if err != nil {
-		log.Panic(err)
 		return err
 	}
 	off += 2
 	dh.AnCount, err = ReadUint16(msg, off)
 	if err != nil {
-		log.Panic(err)
 		return err
 	}
 	off += 2
 	dh.NsCount, err = ReadUint16(msg, off)
 	if err != nil {
-		log.Panic(err)
 		return err
 	}
 	off += 2
-	fmt.Println("OFFSET", off)
-	fmt.Println("MSGLEN", len(msg))
 	dh.ArCount, err = ReadUint16(msg, off)
 	if err != nil {
-		log.Panic(err)
 		return err
 	}
 	return nil
@@ -209,12 +199,14 @@ func PutUint16(msg []byte, off int, v uint16) error {
 
 // This function is a stripped down version of this https://github.com/miekg/dns/blob/master/msg.go#L378
 func readQname(msg []byte, off int) (string, int, error) {
+	fmt.Println("OFF202", off)
 	off1 := 0
 	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
 	res := make([]byte, 0)
 Loop:
 	for {
+		fmt.Println("LENMSG", lenmsg, off)
 		if off >= lenmsg {
 			return "", lenmsg, newErr("overflow of slice")
 		}
@@ -253,6 +245,7 @@ Loop:
 			ptr++
 			off = (c^0xC0)<<8 | int(c1)
 		default:
+			fmt.Println("c & 0xC0", c&0xC0)
 			// 0x80 and 0x40 are reserved
 			return "", lenmsg, newErr("bad domain name")
 		}

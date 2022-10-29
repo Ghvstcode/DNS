@@ -1,6 +1,8 @@
 package dnslib
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 type DNSRecord struct {
 	QNAME    string
@@ -14,10 +16,14 @@ type DNSRecord struct {
 func (dr *DNSRecord) unmarshall(msg []byte) (int, error) {
 	var off int
 	var err error
-	dr.QNAME, off, err = readQname(msg, off)
-	if err != nil {
-		return 0, err
-	}
+
+	//dr.QNAME, off, err = readQname(msg, off)
+	//if err != nil {
+	//	panic(err)
+	//	return 0, err
+	//}
+
+	off += 2
 
 	// Read the Question type
 	qt, err := ReadUint16(msg, off)
