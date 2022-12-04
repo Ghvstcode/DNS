@@ -2,19 +2,9 @@ package dnslib
 
 import (
 	"errors"
-	"fmt"
 )
 
 type RCODE int
-
-const (
-	NOERROR RCODE = iota
-	FORMERR
-	SERVFAIL
-	NXDOMAIN
-	NOTIMP
-	REFUSED
-)
 
 // DNS MSG HEADER
 //+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+---------+
@@ -199,14 +189,12 @@ func PutUint16(msg []byte, off int, v uint16) error {
 
 // This function is a stripped down version of this https://github.com/miekg/dns/blob/master/msg.go#L378
 func readQname(msg []byte, off int) (string, int, error) {
-	fmt.Println("OFF202", off)
 	off1 := 0
 	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
 	res := make([]byte, 0)
 Loop:
 	for {
-		fmt.Println("LENMSG", lenmsg, off)
 		if off >= lenmsg {
 			return "", lenmsg, newErr("overflow of slice")
 		}
@@ -245,7 +233,6 @@ Loop:
 			ptr++
 			off = (c^0xC0)<<8 | int(c1)
 		default:
-			fmt.Println("c & 0xC0", c&0xC0)
 			// 0x80 and 0x40 are reserved
 			return "", lenmsg, newErr("bad domain name")
 		}

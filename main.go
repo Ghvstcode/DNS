@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/Ghvstcode/DNS/pkg/dnslib"
@@ -21,13 +21,18 @@ import (
 //|      Additional     | additional records
 
 func main() {
-	data, err := os.ReadFile("response_packet.txt")
+	input := "response_packet.txt"
+
+	if len(os.Args) > 1 {
+		input = os.Args[1]
+	}
+
+	data, err := os.ReadFile(input)
 	if err != nil {
-		fmt.Println("File reading error", err)
+		log.Printf("error reading file %v", err)
 		return
 	}
 
-	fmt.Println("INCLEN", len(data))
 	dp := &dnslib.DNSPacket{}
 	if err := dp.Unmarshall(data); err != nil {
 		panic(err)
