@@ -13,3 +13,4 @@
 <img width="520" alt="raycast-untitled" src="https://user-images.githubusercontent.com/46195831/205512178-9d0577d4-2fbe-430d-93d6-806c1b6ea482.png">
 <br>
 * While writting this I spent a lot of time perusing this [awesome package](https://github.com/miekg/dns). You should definietly take a look if youre doing any DNS related work in Go. 
+* This project is still actively in progress
